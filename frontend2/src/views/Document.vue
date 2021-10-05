@@ -5,8 +5,10 @@
         <p v-if="parents.length > 0">
           <template v-for="(parent, index) of parents" >
             <a :href="parent.identifier" class="text-blue-700">{{ parent.label }}</a>
-            <span v-if="index < parents.length - 1"> > </span>
+            <span> > </span>
           </template>
+
+          <span>{{ getLabel(state.document!) }}</span>
         </p>
 
         <br />
