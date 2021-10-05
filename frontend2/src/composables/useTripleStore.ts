@@ -80,7 +80,7 @@ export function getCatalogs (document: Array<Bindings>) {
   return catalogs
 }
 
-export function getParent (document: Array<Bindings>) {
+export function getIsPartOf (document: Array<Bindings>) {
   for (const triple of document) {
     if (checkPredicateValue(triple, 'http://purl.org/dc/terms/isPartOf')) {
       return triple.get('?o').value
@@ -162,4 +162,27 @@ export function getMetadataIssued (document: Array<Bindings>) {
   }
 
   return null
+}
+
+export function getLabel (document: Array<Bindings>) {
+  for (const triple of document) {
+    if (checkPredicateValue(triple, 'http://www.w3.org/2000/01/rdf-schema#label')) {
+      return triple.get('?o').value
+    }
+  }
+
+  return null
+}
+
+export function isDirectContainer (document: Array<Bindings>) {
+  for (const triple of document) {
+    if (
+      checkPredicateValue(triple, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') &&
+      triple.get('?o').value === 'http://www.w3.org/ns/ldp#DirectContainer'
+    ) {
+      return true
+    }
+  }
+
+  return false
 }
