@@ -3,7 +3,7 @@
     <div class="max-w-lg w-full h-full rounded-lg shadow-lg p-4 bg-white">
       <h3 class="font-semibold text-lg tracking-wide">
         <router-link
-          :to="{ name: 'document', params: { documents: [...parents, document.identifier] } }"
+          :to="{ name: 'document', params: { id: document.identifier } }"
           target="_blank"
           class="text-blue-700"
         >
@@ -28,24 +28,12 @@
   </section>
 </template>
 
-<script lang="ts">
-  import { defineComponent } from 'vue'
+<script setup lang="ts">
+  import { computed } from 'vue'
   import { useRoute } from 'vue-router'
 
-  export default defineComponent({
-    name: 'Card',
-
-    props: {
-      document: Object,
-      types: Object
-    },
-
-    setup() {
-      const $route = useRoute()
-
-      return {
-        parents: $route.params.documents ?? []
-      }
-    }
+  defineProps({
+    document: Object,
+    types: Object
   })
 </script>
