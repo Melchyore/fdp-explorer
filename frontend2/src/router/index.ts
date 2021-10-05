@@ -9,7 +9,7 @@ const routes: Array<RouteRecordRaw> = [
   },
 
   {
-    path: '/document/:documents+',
+    path: '/document/:id',
     name: 'document',
     component: () => import('../views/Document.vue')
   }
