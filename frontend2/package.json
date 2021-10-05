@@ -14,6 +14,8 @@
     "n3": "^1.9.0",
     "rdf-parse": "^1.7.0",
     "rdflib": "^2.2.0",
+    "sass": "^1.42.1",
+    "sass-loader": "^10.1.1",
     "setimmediate": "^1.0.5",
     "streamify-string": "^1.0.1",
     "vue": "^3.0.0",
@@ -40,9 +42,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0",
     "eslint-plugin-vue": "^7.0.0",
-    "node-sass": "^4.12.0",
     "postcss": "7",
-    "sass-loader": "^8.0.2",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat",
     "typescript": "~4.1.5"
   }
