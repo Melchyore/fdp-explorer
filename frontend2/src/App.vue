@@ -2,23 +2,20 @@
   <Header />
 
   <div class="p-8 flex items-center justify-center">
-    <div class="w-full max-w-xs mx-auto">
+    <div class="w-full max-w-lg mx-auto">
       <div>
         <!--<label for="price" class="block text-sm font-medium text-gray-700">Search</label>-->
-        <div class="h-12 mt-1 relative rounded-md shadow-lg">
-          <input v-model="state.search" type="text" name="search" id="price" class="h-full block w-full pl-2 pr-14 sm:text-sm rounded-md appearance-none focus:outline-none" placeholder="Search..." @update:modelValue="onInput" @keypress.enter="onSearchSubmit">
+        <div class="h-auto mt-1 relative rounded-md">
+          <input v-model="state.url" type="text" name="addUrl" id="addUrl" class="appearance-none rounded-none block w-full pl-3 pr-8 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Add URL" @update:modelValue="onInput" @keypress.enter="onSearchSubmit">
+
           <div class="absolute inset-y-0 right-1 flex items-center text-indigo-500 cursor-pointer" @click="onSearchSubmit">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              <path stroke-width="2" d="M16 9h-5V4H9v5H4v2h5v5h2v-5h5V9z"></path>
             </svg>
           </div>
         </div>
 
         <br/>
-
-        <span v-if="state.searchDone">
-          Search results: {{ state.searchResults.length }} matches
-        </span>
 
         <br />
 
@@ -36,14 +33,35 @@
     </div>
   </div>
 
-  <div v-if="state.searchInitiated && !state.searchDone" class="spinner ease-linear mx-auto rounded-full border-2 border-t-2 h-16 w-16"></div>
+  <template v-if="state.fetchInitiated && !state.fetchDone">
+    <section class="h-full flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-lg w-full h-full space-y-8">
+        <div class="h-2/6">
+          <p class="mt-2 text-center text-sm text-gray-600 truncate">
+            Fetching
+            <a :href="state.url" target="_blank" class="text-blue-700">{{ state.url }}</a>
+          </p>
+        </div>
 
-  <card
-    v-for="(document, index) in state.searchResults"
-    :key="index"
-    :document="document"
-    :types="state.types"
-  />
+        <div class="mx-auto spinner ease-linear rounded-full border-2 border-t-2 h-16 w-16"></div>
+      </div>
+    </section>
+  </template>
+
+  <div v-if="state.repository.length > 0">
+    <h3 class="font-semibold text-lg tracking-wide">
+      {{ getTitle(state.repository) }}
+    </h3>
+
+    <template v-if="state.isDirectContainer">
+      <card
+        v-for="(document, index) in state.catalogs"
+        :key="index"
+        :document="document"
+        :types="state.types"
+      />
+    </template>
+  </div>
 
   <router-view />
 </template>
@@ -62,9 +80,10 @@
   import Header from './components/Header.vue'
   import Card from './components/Card.vue'
 
-  import useSearch from './composables/useSearch'
-  import { getTitle, getIdentifier, getDescription, getTypes } from './composables/useTripleStore'
+  import useSearch from './composables/useAddURL'
+  import { getTitle, getIdentifier, getDescription, getTypes, isDirectContainer, getCatalogs } from './composables/useTripleStore'
   import executeSPARQLQuery from './lib/SPARQL'
+  import { isValidHttpUrl } from './lib/HTTP'
 
   type Result = {
     uri: string,
@@ -111,7 +130,7 @@
   const onInput = () => {
   }
 
-  const onTypeFilterClick = (type: string) => {
+  /*const onTypeFilterClick = (type: string) => {
     if (state.selectedType === type) {
       state.selectedType = ''
       state.searchResults = state.originalResults
@@ -119,7 +138,7 @@
       state.selectedType = type
       state.searchResults = state.originalResults.filter((result: Result) => result.types.some((_type) => extractType(_type) === type))
     }
-  }
+  }*/
 
   const setTypes = async (tripleStore: Array<Bindings>) => {
     for (const triple of tripleStore) {
@@ -183,66 +202,124 @@
   }
 
   const onSearchSubmit = async () => {
-    state.searchInitiated = true
-    state.searchDone = false
-    state.searchResults = []
+    const url = state.url
 
-    const headers = new Headers()
-    headers.append('Content-Type', 'application/json')
+    if (url) {
+      if (isValidHttpUrl(state.url)) {
+        state.fetchInitiated = true
+        state.fetchDone = false
+        state.catalogs = []
 
-    const options = {
-      method: 'POST',
-      body: JSON.stringify({ q: state.search }),
-      headers
-    }
+        /*const headers = new Headers()
+        headers.append('Content-Type', 'application/json')
 
-    const request = new Request('https://ejprd.fair-dtls.surf-hosted.nl/bbmri-fdp/search', options)
-
-    try {
-      const response = await fetch(request)
-      const data = await response.json() as Array<Result>
-
-      //state.searchResults = state.originalResults = data
-      const allGraphs = [] as Array<any>
-
-      if (data.length > 0) {
-        for (const result of data) {
-          try {
-            const document = await executeSPARQLQuery(result.uri, 'SELECT ?s ?p ?o WHERE { ?s ?p ?o }')
-
-            if (document) {
-              const graph = {
-                title: '',
-                description: '',
-                identifier: '',
-                types: [] as Array<string>
-              }
-
-              graph.title = getTitle(document)!
-              graph.description = getDescription(document)!
-              graph.identifier = getIdentifier(document)!
-              graph.types = await getTypes(document)
-
-              allGraphs.push(graph)
-              setTypes(document as any)
-            }
-          } catch (e) {
-            // console.error(e)
-          }
+        const options = {
+          method: 'POST',
+          body: JSON.stringify({ q: state.search }),
+          headers
         }
+
+        const request = new Request('https://ejprd.fair-dtls.surf-hosted.nl/bbmri-fdp/search', options)
+
+        try {
+          const response = await fetch(request)
+          const data = await response.text()
+
+          //state.searchResults = state.originalResults = data
+          const allGraphs = [] as Array<any>
+
+          if (data.length > 0) {
+            for (const result of data) {
+              try {
+                const document = await executeSPARQLQuery(result.uri, 'SELECT ?s ?p ?o WHERE { ?s ?p ?o }')
+
+                if (document) {
+                  const graph = {
+                    title: '',
+                    description: '',
+                    identifier: '',
+                    types: [] as Array<string>
+                  }
+
+                  graph.title = getTitle(document)!
+                  graph.description = getDescription(document)!
+                  graph.identifier = getIdentifier(document)!
+                  graph.types = await getTypes(document)
+
+                  allGraphs.push(graph)
+                  setTypes(document as any)
+                }
+              } catch (e) {
+                // console.error(e)
+              }
+            }
+          }
+
+          state.searchInitiated = false
+          state.searchDone = true
+
+          // @ts-ignore
+          state.searchResults = Object.freeze(allGraphs)
+        } catch (e) {
+          console.error('error: ', e)
+
+          state.searchInitiated = false
+          state.searchDone = true
+        }*/
+
+        try {
+          state.repository = (await executeSPARQLQuery(state.url, 'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'))!
+
+          if (state.repository) {
+            const repository = state.repository
+
+            if (isDirectContainer(repository)) {
+              state.isDirectContainer = true
+
+              const catalogs = getCatalogs(repository)
+
+              if (catalogs.length > 0) {
+                catalogs.forEach(async (url) => {
+                  const catalog = await executeSPARQLQuery(
+                    url,
+                    'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'
+                  )
+
+                  if (catalog) {
+                    state.catalogs.push({
+                      title: getTitle(catalog),
+                      description: getDescription(catalog),
+                      identifier: getIdentifier(catalog),
+                      types: []
+                    })
+                  }
+                })
+              }
+            }
+
+            const repositoryData = {
+              title: '',
+              description: '',
+              identifier: '',
+              types: [] as Array<string>
+            }
+
+            repositoryData.title = getTitle(repository)!
+            repositoryData.description = getDescription(repository)!
+            repositoryData.identifier = getIdentifier(repository)!
+            repositoryData.types = await getTypes(repository)
+
+            console.log(document)
+          }
+        } catch (e) {
+          // console.error(e)
+        }
+
+        state.fetchInitiated = false
+        state.fetchDone = true
       }
-
-      state.searchInitiated = false
-      state.searchDone = true
-
-      // @ts-ignore
-      state.searchResults = Object.freeze(allGraphs)
-    } catch (e) {
-      console.error('error: ', e)
-
-      state.searchInitiated = false
-      state.searchDone = true
     }
+
   }
 </script>
 
