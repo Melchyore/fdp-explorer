@@ -47,7 +47,7 @@ export function getDescription (tripleStore: Array<Bindings>) {
   }
 }
 
-export async function getTypes (tripleStore: Array<Bindings>) {
+export function getTypes (tripleStore: Array<Bindings>) {
   const types = []
 
   for (const triple of tripleStore) {
@@ -185,4 +185,78 @@ export function isDirectContainer (document: Array<Bindings>) {
   }
 
   return false
+}
+
+export function getTheme (tripleStore: Array<Bindings>) {
+  const themes = [] as Array<string>
+
+  for (const triple of tripleStore) {
+    if (checkPredicateValue(triple, 'http://www.w3.org/ns/dcat#theme')) {
+      themes.push(triple.get('?o')?.value)
+    }
+  }
+
+  return themes
+}
+
+export function getRemainingTriples (tripleStore: Array<Bindings>) {
+  const triples = {} as Record<string, string | Array<string>>
+  const predicates = [
+    'http://purl.org/dc/terms/description',
+    'http://purl.org/dc/terms/title',
+    'http://purl.org/dc/terms/identifier',
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+    'http://www.w3.org/ns/ldp#contains',
+    'http://purl.org/dc/terms/isPartOf',
+    'http://purl.org/dc/terms/accessRights',
+    'http://purl.org/dc/terms/hasVersion',
+    'http://purl.org/dc/terms/language',
+    'http://purl.org/dc/terms/license',
+    'http://rdf.biosemantics.org/ontologies/fdp-o#metadataIssued',
+    'http://www.w3.org/2000/01/rdf-schema#label',
+    'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+    'http://www.w3.org/ns/dcat#theme',
+  ]
+  const identifier = getIdentifier(tripleStore)
+
+  for (const triple of tripleStore) {
+    const predicate = triple.get('?p').value
+
+    if (identifier === triple.get('?s').value && !predicates.includes(predicate)) {
+      const normalizedLabel = normalizePredicateLabel(predicate)
+
+      if (normalizedLabel) {
+
+        // The triple has multiple object values.
+        if (triples[normalizedLabel]) {
+          const previousValue = triples[normalizedLabel]
+
+          // If it has already been converted into array, we push.
+          if (Array.isArray(previousValue)) {
+            (triples[normalizedLabel] as Array<string>).push(triple.get('?o').value)
+          } else { // If not, we convert it to an Array, and we push the first value with the new one. 
+            triples[normalizedLabel] = [previousValue, triple.get('?o').value]
+          }
+        } else {
+          triples[normalizedLabel] = triple.get('?o').value
+        }
+      }
+    }
+  }
+
+  return triples
+}
+
+function normalizePredicateLabel (predicateLabel: string) {
+  let label = predicateLabel.split('/').pop()
+
+  if (label) {
+    if (label.includes('#')) {
+      label = label.split('#').pop()
+    }
+
+    return label
+  }
+
+  return null
 }

@@ -68,7 +68,10 @@
     getLanguage,
     getLicense,
     getLabel,
-    isDirectContainer
+    isDirectContainer,
+    getRemainingTriples,
+    getTheme,
+    getTypes
   } from '../composables/useTripleStore'
 
   const $route = useRoute()
@@ -81,63 +84,69 @@
     license: '' as string | null | undefined
   })
 
+  const getAllParents = async (document: Array<Bindings>) => {
+    const isPartOf = getIsPartOf(document)
+  
+    if (isPartOf) {
+      const parent = await executeSPARQLQuery(
+        // @ts-ignore
+        isPartOf,
+        'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'
+      )
+
+      if (parent) {
+        parents.value.unshift({
+          identifier: getIdentifier(parent)!,
+          label: getLabel(parent)!
+        })
+
+        getAllParents(parent)
+      }
+    }
+  }
+
   onMounted(async () => {
-    state.document = await executeSPARQLQuery(
-      // @ts-ignore
-      $route.params.id,
-      'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'
-    )
+    try {
+        state.document = await executeSPARQLQuery(
+        // @ts-ignore
+        $route.params.id,
+        'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'
+      )
 
-    if (state.document) {
-      const getAllParents = async (document: Array<Bindings>) => {
-        const isPartOf = getIsPartOf(document)
-      
-        if (isPartOf) {
-          const parent = await executeSPARQLQuery(
-            // @ts-ignore
-            isPartOf,
-            'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'
-          )
+      console.log(getTypes(state.document!))
 
-          if (parent) {
-            parents.value.unshift({
-              identifier: getIdentifier(parent)!,
-              label: getLabel(parent)!
+      if (state.document) {
+        getAllParents(state.document)
+
+        state.language = await getLanguage(state.document)
+        state.license = await getLicense(state.document)
+
+        const directContainer = isDirectContainer(state.document)
+
+        if (directContainer) {
+          const catalogs = getCatalogs(state.document)
+
+          if (catalogs.length > 0) {
+            catalogs.forEach(async (url) => {
+              const catalog = await executeSPARQLQuery(
+                url,
+                'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'
+              )
+
+              if (catalog) {
+                state.catalogs.push({
+                  title: getTitle(catalog),
+                  description: getDescription(catalog),
+                  identifier: getIdentifier(catalog),
+                  types: []
+                })
+              }
             })
-
-            getAllParents(parent)
           }
         }
       }
-
-      getAllParents(state.document)
-
-      state.language = await getLanguage(state.document)
-      state.license = await getLicense(state.document)
-
-      const directContainer = isDirectContainer(state.document)
-
-      if (directContainer) {
-        const catalogs = getCatalogs(state.document)
-
-        if (catalogs.length > 0) {
-          catalogs.forEach(async (url) => {
-            const catalog = await executeSPARQLQuery(
-              url,
-              'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'
-            )
-
-            if (catalog) {
-              state.catalogs.push({
-                title: getTitle(catalog),
-                description: getDescription(catalog),
-                identifier: getIdentifier(catalog),
-                types: []
-              })
-            }
-          })
-        }
-      }
+    } catch (e) {
+      console.log(e)
     }
   })
 </script>

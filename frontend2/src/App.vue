@@ -273,6 +273,8 @@
           if (state.repository) {
             const repository = state.repository
 
+            console.log(getTypes(repository))
+
             if (isDirectContainer(repository)) {
               state.isDirectContainer = true
 
@@ -308,8 +310,6 @@
             repositoryData.description = getDescription(repository)!
             repositoryData.identifier = getIdentifier(repository)!
             repositoryData.types = await getTypes(repository)
-
-            console.log(document)
           }
         } catch (e) {
           // console.error(e)
