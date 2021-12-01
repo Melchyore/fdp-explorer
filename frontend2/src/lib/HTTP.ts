@@ -1,6 +1,6 @@
 type RequestOptions = {
   method: string,
-  mode: RequestMode,
+  //mode: RequestMode,
   headers: Headers,
   body?: string
 }
@@ -25,18 +25,18 @@ export async function post (URL: string, headers: Headers = new Headers(), body:
   }
 }
 
-export async function get (URL: string, headers: Headers = new Headers()) {
+export async function get (URL: string, headers: Headers = new Headers(), timeout?: number) {
   try {
-    return await executeRequest('GET', URL, headers)
+    return await executeRequest('GET', URL, headers, {}, timeout)
   } catch (e) {
     throw new Error(e)
   }
 }
 
-async function executeRequest (method: string, URL: string, headers: Headers, body: Record<string, unknown> = {}) {
+async function executeRequest (method: string, URL: string, headers: Headers, body: Record<string, unknown> = {}, timeout?: number) {
   const options: RequestOptions = {
     method: method.toUpperCase(),
-    mode: 'no-cors',
+    //mode: 'no-cors',
     headers
   }
 
@@ -45,8 +45,26 @@ async function executeRequest (method: string, URL: string, headers: Headers, bo
   }
 
   try {
-    return await fetch(new Request(URL, options))
+    const request = new Request(URL, options)
+    const response = await (timeout ? fetchWithTimeout(request, { timeout }) : fetch(request))
+
+    return response
   } catch (e) {
     throw new Error(e)
   }
+}
+
+async function fetchWithTimeout(resource: RequestInfo, options: RequestInit & { timeout?: number } = {}) {
+  const { timeout = 8000 } = options
+  
+  const controller = new AbortController()
+  const id = setTimeout(() => controller.abort(), timeout)
+  const response = await fetch(resource, {
+    ...options,
+    signal: controller.signal  
+  })
+
+  clearTimeout(id)
+
+  return response
 }

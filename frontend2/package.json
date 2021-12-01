@@ -12,6 +12,7 @@
     "@tailwindcss/line-clamp": "^0.2.0",
     "core-js": "^3.6.5",
     "n3": "^1.9.0",
+    "raw-loader": "^4.0.2",
     "rdf-parse": "^1.7.0",
     "rdflib": "^2.2.0",
     "sass": "^1.42.1",
@@ -20,7 +21,8 @@
     "streamify-string": "^1.0.1",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0",
-    "vuex": "^4.0.0-0"
+    "vuex": "^4.0.0-0",
+    "xslt3-loader": "^0.0.9"
   },
   "devDependencies": {
     "@tailwindcss/postcss7-compat": "^2.1.0",

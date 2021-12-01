@@ -9420,6 +9420,14 @@ raw-body@2.4.0:
     iconv-lite "0.4.24"
     unpipe "1.0.0"
 
+raw-loader@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/raw-loader/-/raw-loader-4.0.2.tgz#1aac6b7d1ad1501e66efdac1522c73e59a584eb6"
+  integrity sha512-ZnScIV3ag9A4wPX/ZayxL/jZH+euYb6FcUinPcgiQW0+UBtEv0O6Q3lGd3cqJ+GHH+rksEv3Pj99oxJ3u3VIKA==
+  dependencies:
+    loader-utils "^2.0.0"
+    schema-utils "^3.0.0"
+
 rdf-canonize@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/rdf-canonize/-/rdf-canonize-3.0.0.tgz#f5bade563e5e58f5cc5881afcba3c43839e8c747"
@@ -11713,6 +11721,14 @@ xmldom@^0.6.0:
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.6.0.tgz#43a96ecb8beece991cef382c08397d82d4d0c46f"
   integrity sha512-iAcin401y58LckRZ0TkI4k0VSM1Qg0KGSc3i8rU+xrxe19A/BN1zHyVSJY7uoutVlaTSzYyk/v5AmkewAP7jtg==
+
+xslt3-loader@^0.0.9:
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/xslt3-loader/-/xslt3-loader-0.0.9.tgz#8f684d8842ad5ef25c8ae7b68aec1291e03a8f0b"
+  integrity sha512-5lHykyL+Fy3kJmp1fFB50p6IMtempEwIRRV3aN4tehKnuifUmqAJftJ6iPrxx+aANCX2M5ab/vzCQpK/SpveuQ==
+  dependencies:
+    loader-utils "^2.0.0"
+    tmp "^0.2.1"
 
 xtend@^4.0.0, xtend@^4.0.2, xtend@~4.0.1:
   version "4.0.2"

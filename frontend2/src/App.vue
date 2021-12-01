@@ -6,7 +6,7 @@
       <div>
         <!--<label for="price" class="block text-sm font-medium text-gray-700">Search</label>-->
         <div class="h-auto mt-1 relative rounded-md">
-          <input v-model="state.url" type="text" name="addUrl" id="addUrl" class="appearance-none rounded-none block w-full pl-3 pr-8 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Add URL" @update:modelValue="onInput" @keypress.enter="onSearchSubmit">
+          <input v-model="state.uri" type="text" name="addUrl" id="addUrl" class="appearance-none rounded-none block w-full pl-3 pr-8 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" placeholder="Add URL" @update:modelValue="onInput" @keypress.enter="onSearchSubmit">
 
           <div class="absolute inset-y-0 right-1 flex items-center text-indigo-500 cursor-pointer" @click="onSearchSubmit">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -34,12 +34,12 @@
   </div>
 
   <template v-if="state.fetchInitiated && !state.fetchDone">
-    <section class="h-full flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <section class="h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div class="max-w-lg w-full h-full space-y-8">
         <div class="h-2/6">
           <p class="mt-2 text-center text-sm text-gray-600 truncate">
             Fetching
-            <a :href="state.url" target="_blank" class="text-blue-700">{{ state.url }}</a>
+            <a :href="state.uri" target="_blank" class="text-blue-700">{{ state.uri }}</a>
           </p>
         </div>
 
@@ -48,14 +48,16 @@
     </section>
   </template>
 
-  <div v-if="state.repository.length > 0">
-    <h3 class="font-semibold text-lg tracking-wide">
-      {{ getTitle(state.repository) }}
-    </h3>
+  <div v-html="state.resource" v-if="state.graph"></div>
 
-    <template v-if="state.isDirectContainer">
+  <div v-if="state.graph">
+    <!--<h3 class="font-semibold text-lg tracking-wide">
+      {{ getTitle(state.repository) }}
+    </h3>-->
+
+    <template v-if="state.children.length > 0">
       <card
-        v-for="(document, index) in state.catalogs"
+        v-for="(document, index) in state.children"
         :key="index"
         :document="document"
         :types="state.types"
@@ -80,7 +82,7 @@
   import Header from './components/Header.vue'
   import Card from './components/Card.vue'
 
-  import useSearch from './composables/useAddURL'
+  import useAddURL from './composables/useAddURL'
   import { getTitle, getIdentifier, getDescription, getTypes, isDirectContainer, getCatalogs } from './composables/useTripleStore'
   import executeSPARQLQuery from './lib/SPARQL'
   import { isValidHttpUrl } from './lib/HTTP'
@@ -96,7 +98,7 @@
     typesCache = await caches.open('types-cache')
   })
 
-  const { state } = useSearch()
+  const { state, onSubmit } = useAddURL()
 
   /* const types = computed(() => state.originalResults.map((data: Result) => {
     const _types = data.types
@@ -167,8 +169,8 @@
         .query(`
           SELECT DISTINCT ?label
           WHERE {
-              <${typeURL}> <http://www.w3.org/2000/01/rdf-schema#label> ?label.
-              FILTER(LANG(?label) = "en")
+            <${typeURL}> <http://www.w3.org/2000/01/rdf-schema#label> ?label.
+            FILTER(LANG(?label) = "en")
           }
         `, {
           sources: [typeURL.replace('http:', 'https:')]
@@ -202,13 +204,15 @@
   }
 
   const onSearchSubmit = async () => {
-    const url = state.url
+    const uri = state.uri
 
-    if (url) {
-      if (isValidHttpUrl(state.url)) {
+    if (uri) {
+      if (isValidHttpUrl(uri)) {
         state.fetchInitiated = true
         state.fetchDone = false
-        state.catalogs = []
+        state.children = []
+
+        await onSubmit()
 
         /*const headers = new Headers()
         headers.append('Content-Type', 'application/json')
@@ -268,17 +272,19 @@
         }*/
 
         try {
-          state.repository = (await executeSPARQLQuery(state.url, 'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'))!
+          //state.repository = (await executeSPARQLQuery(state.url, 'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'))!
+          setTimeout(async () => {
+            console.log(state.graph?.types)
+            console.log(state.graph?.children.size)
+          }, 500)
 
-          if (state.repository) {
+          /*if (state.repository) {
             const repository = state.repository
 
             console.log(getTypes(repository))
 
-            if (isDirectContainer(repository)) {
-              state.isDirectContainer = true
-
-              const catalogs = getCatalogs(repository)
+            // Some documents are not direct containers, so we need to check for #dataCatalog and ldp#contains.
+            const catalogs = getCatalogs(repository)
 
               if (catalogs.length > 0) {
                 catalogs.forEach(async (url) => {
@@ -297,6 +303,9 @@
                   }
                 })
               }
+
+            if (isDirectContainer(repository)) {
+              state.isDirectContainer = true
             }
 
             const repositoryData = {
@@ -310,9 +319,9 @@
             repositoryData.description = getDescription(repository)!
             repositoryData.identifier = getIdentifier(repository)!
             repositoryData.types = await getTypes(repository)
-          }
+          }*/
         } catch (e) {
-          // console.error(e)
+          console.error(e)
         }
 
         state.fetchInitiated = false

@@ -45,6 +45,8 @@ export function getDescription (tripleStore: Array<Bindings>) {
       return triple.get('?o')?.value
     }
   }
+
+  return null
 }
 
 export function getTypes (tripleStore: Array<Bindings>) {
@@ -72,12 +74,27 @@ export function getCatalogs (document: Array<Bindings>) {
   const catalogs = []
 
   for (const triple of document) {
-    if (checkPredicateValue(triple, 'http://www.w3.org/ns/ldp#contains')) {
+    if (
+      checkPredicateValue(triple, 'http://www.w3.org/ns/ldp#contains') ||
+      checkPredicateValue(triple, 'http://www.re3data.org/schema/3-0#dataCatalog')
+    ) {
       catalogs.push(triple.get('?o').value)
     }
   }
 
   return catalogs
+}
+
+export function getDatasets (document: Array<Bindings>) {
+  const datasets = []
+
+  for (const triple of document) {
+    if (checkPredicateValue(triple, 'http://www.w3.org/ns/dcat#dataset')) {
+      datasets.push(triple.get('?o').value)
+    }
+  }
+
+  return datasets
 }
 
 export function getIsPartOf (document: Array<Bindings>) {
@@ -139,12 +156,16 @@ export async function getLicense (document: Array<Bindings>) {
 
       // If the license is not a literal string, then we fetch the document.
       if (HTTP.isValidHttpUrl(object)) {
-        const headers = new Headers()
-        headers.append('Accept', 'text/turtle')
+        try {
+          const headers = new Headers()
+          headers.append('Accept', 'text/turtle')
 
-        const response = await HTTP.get(object, headers)
+          const response = await HTTP.get(object, headers, 1000)
 
-        //if (response.headers.get('Content-Type')?.split(';')[0].toLowerCase() === 'text/turtle') {}
+          //if (response.headers.get('Content-Type')?.split(';')[0].toLowerCase() === 'text/turtle') {}
+        } catch {
+          return object
+        }
       }
 
       return object
