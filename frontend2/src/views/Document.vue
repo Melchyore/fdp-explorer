@@ -16,48 +16,20 @@
   import { onBeforeMount, reactive, defineAsyncComponent } from 'vue'
   import { useRoute } from 'vue-router'
 
-  import type { Bindings } from '@comunica/types'
-
-  import Card from '../components/Card.vue'
-
-  import executeSPARQLQuery from '../lib/SPARQL'
-  import { isValidHttpUrl } from '../lib/HTTP'
-
-  import {
-    getTitle,
-    getDescription,
-    getIdentifier,
-    getCatalogs,
-    getIsPartOf,
-    getAccessRights,
-    getVersion,
-    getMetadataIssued,
-    getLanguage,
-    getLicense,
-    getLabel,
-    isDirectContainer,
-    getRemainingTriples,
-    getTheme,
-    getTypes
-  } from '../composables/useTripleStore'
+  import { getJSONGraph } from '@/lib/Utils'
 
   const resource = defineAsyncComponent(() => import('@/components/Resource.vue'))
 
   const $route = useRoute()
 
   const state = reactive({
-    document: [] as Array<Bindings>
+    document: []
   })
 
   onBeforeMount(async () => {
     try {
-      state.document = (await executeSPARQLQuery(
-        // @ts-ignore
-        $route.params.id,
-        'SELECT ?s ?p ?o WHERE { ?s ?p ?o }'
-      ))!
-
-      console.log(getTypes(state.document!))
+      // @ts-ignore
+      state.document = await getJSONGraph($route.params.id)
     } catch (e) {
       console.log(e)
     }

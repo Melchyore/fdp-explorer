@@ -175,21 +175,9 @@
         </div>
       </div>
     </div>
-
 </template>
 
-<script lang="ts">
-  import { defineComponent } from 'vue'
-
-  export default defineComponent({
-    name: 'Header',
-
-    props: {},
-
-    setup () {
-
-    }
-  })
+<script lang="ts" setup>
 </script>
 
 <style scoped>

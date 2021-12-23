@@ -4,6 +4,7 @@ import * as HTTP from '@/lib/HTTP'
 import { Graph, GraphInterface } from '@/lib/Graph'
 
 import * as ResourceStylesheet from '@/stylesheets/Resource.xsl'
+import { getJSONGraph } from '@/lib/Utils'
 
 export default function useAddURL () {
   const state = reactive({
@@ -16,25 +17,20 @@ export default function useAddURL () {
     selectedType: '',
     graphURI: null,
     types: {} as Record<string, any>,
-    resource: ''
+    resource: [] as Array<Record<string, unknown>>
   })
 
   const onSubmit = async () => {
     state.graph = null
+    state.resource = []
 
     const headers = new Headers()
     headers.append('Accept', 'text/turtle')
 
     if (state.uri) {
-      if (!state.uri.endsWith('/')) {
-        state.uri += '/'
-      }
+      //_headers.append('Accept', 'application/rdf+xml')
 
-      const _headers = new Headers()
-      _headers.append('Accept', 'application/rdf+xml')
-      const _response = await HTTP.get(state.uri, _headers)
-
-      const parser = new DOMParser()
+      /*const parser = new DOMParser()
       const xsl = parser.parseFromString(ResourceStylesheet.default, 'text/xml')
       const xsltProcessor = new XSLTProcessor()
       xsltProcessor.importStylesheet(xsl)
@@ -43,7 +39,8 @@ export default function useAddURL () {
 
       const serializer = new XMLSerializer()
 
-      state.resource = serializer.serializeToString(resultDocument)
+      state.resource = serializer.serializeToString(resultDocument)*/
+      state.resource = await getJSONGraph(state.uri)
   
       try {
         const response = await HTTP.get(state.uri, headers)
@@ -54,6 +51,8 @@ export default function useAddURL () {
     }
 
     state.uri = null
+    state.fetchInitiated = false
+    state.fetchDone = true
   }
 
   return {
