@@ -8,40 +8,37 @@
   xmlns:ss="http://semanticscience.org/resource/"
   xmlns:obo="http://purl.obolibrary.org/obo/"
   xmlns:owl="http://www.w3.org/2002/07/owl#"
+  xmlns:ldp="http://www.w3.org/ns/ldp#"
   xmlns:fdpo="http://rdf.biosemantics.org/ontologies/fdp-o#"
   xmlns:foaf="http://xmlns.com/foaf/0.1/">
     <xsl:output method="html" encoding="utf-8" indent="yes"/>
     <xsl:template match="/">
       <xsl:variable name="identifier" select="//rdf:Description/dcterms:identifier" />
+      <xsl:variable name="childrenNode" select="//ldp:hasMemberRelation[1]/../@rdf:about" />
 
       <html>
         <head>
-          <style type="text/css">
-            body {font-family: Verdana,Arial,Helvetica, sans-serif; font-size: 11px; }
-            table {vertical-align: top;}
-            tr { vertical-align: top;}
-            td { vertical-align: top; font-family: Verdana,Arial,Helvetica, sans-serif; font-size: 11px; }
-            .header { text-align:right; text-decoration: ; font-weight:bold; color:rgb(0,0,0); }
-          </style>
         </head>
 
         <body>
           <xsl:element name="p">
             <xsl:attribute name="class">
-              text-xl
+              font-semibold text-3xl tracking-wide
             </xsl:attribute>
 
             <xsl:value-of select="//rdf:Description/rdfs:label" />
           </xsl:element>
 
           <xsl:element name="p">
-            <xsl:value-of select="//rdf:Description/dcterms:description" />
+            <xsl:value-of select="//rdf:Description[@rdf:about = $identifier]/dcterms:description" />
           </xsl:element>
+
+          <br />
 
           <table>
             <tr>
               <td>
-                accessRights
+                <strong>accessRights</strong>
               </td>
 
               <td>
@@ -51,19 +48,23 @@
 
             <tr>
               <td>
-                conformsTo
+                <strong>conformsTo</strong>
               </td>
 
               <td>
-                <xsl:call-template name="makelink">
-                  <xsl:with-param name="url" select="//rdf:Description/dcterms:conformsTo/@rdf:resource"/>
-                </xsl:call-template>
+                <xsl:for-each select="//rdf:Description/dcterms:conformsTo">
+                  <xsl:element name="p">
+                    <xsl:call-template name="makelink">
+                      <xsl:with-param name="url" select="current()/@rdf:resource"/>
+                    </xsl:call-template>
+                  </xsl:element>
+                </xsl:for-each>
               </td>
             </tr>
 
             <tr>
               <td>
-                hasVersion
+                <strong>hasVersion</strong>
               </td>
 
               <td>
@@ -73,7 +74,7 @@
 
             <tr>
               <td>
-                identifier
+                <strong>identifier</strong>
               </td>
 
               <td>
@@ -85,7 +86,7 @@
 
             <tr>
               <td>
-                type
+                <strong>type</strong>
               </td>
 
               <td>
@@ -106,12 +107,11 @@
 
             <tr>
               <td>
-                Language
+                <strong>Language</strong>
               </td>
 
               <td>
                 <xsl:variable name="language" select="//rdf:Description/dcterms:language/@rdf:resource" />
-                <!--<xsl:value-of select="tokenize($language,'/')[last()]" />-->
 
                 <xsl:call-template name="substring-after-last">
                   <xsl:with-param name="input" select="$language" />
@@ -122,7 +122,7 @@
 
             <tr>
               <td>
-                License
+                <strong>License</strong>
               </td>
 
               <td>
@@ -136,12 +136,10 @@
 
             <tr>
               <td>
-                Publisher
+                <strong>Publisher</strong>
               </td>
 
               <td>
-                <!--<xsl:value-of select="//rdf:Description[@rdf:about= concat($identifier, '#publisher')]/foaf:name" />-->
-
                 <xsl:choose>
                   <xsl:when test="//rdf:Description/dcterms:publisher/@rdf:resource">
                     <xsl:value-of select="//rdf:Description[@rdf:about= concat($identifier, '#publisher')]/foaf:name" />
@@ -156,7 +154,7 @@
 
             <tr>
               <td>
-                metadatraIssued
+                <strong>metadatraIssued</strong>
               </td>
 
               <td>
@@ -164,21 +162,39 @@
               </td>
             </tr>
           </table>
+
+          <br />
+
+          <xsl:element name="p">
+            <xsl:attribute name="class">
+              font-semibold text-xl tracking-wide
+            </xsl:attribute>
+
+            <xsl:value-of select="//rdf:Description[@rdf:about = $childrenNode]/dcterms:title"/>
+          </xsl:element>
+
+          <xsl:for-each select="//rdf:Description[@rdf:about = $childrenNode]/ldp:contains">
+            <xsl:element name="p">
+              <xsl:call-template name="makelink">
+                <xsl:with-param name="url" select="current()/@rdf:resource"/>
+              </xsl:call-template>
+            </xsl:element>
+          </xsl:for-each>
         </body>
       </html>
     </xsl:template>
 
     <xsl:template name="makelink">
-        <xsl:param name="url" />
-        <xsl:element name="a">
-            <xsl:attribute name="href">
-                <xsl:value-of select="$url"/>
-            </xsl:attribute>
-            <xsl:attribute name="class">
-              text-blue-700
-            </xsl:attribute>
+      <xsl:param name="url" />
+      <xsl:element name="a">
+        <xsl:attribute name="href">
             <xsl:value-of select="$url"/>
-        </xsl:element>
+        </xsl:attribute>
+        <xsl:attribute name="class">
+          text-blue-700
+        </xsl:attribute>
+        <xsl:value-of select="$url"/>
+      </xsl:element>
     </xsl:template>
 
     <xsl:template name="substring-after-last">

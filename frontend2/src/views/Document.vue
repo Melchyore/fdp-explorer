@@ -16,7 +16,7 @@
   import { onBeforeMount, reactive, defineAsyncComponent } from 'vue'
   import { useRoute } from 'vue-router'
 
-  import { getJSONGraph } from '@/lib/Utils'
+  import { getGraphWithFormat } from '@/lib/Utils'
 
   const resource = defineAsyncComponent(() => import('@/components/Resource.vue'))
 
@@ -29,7 +29,7 @@
   onBeforeMount(async () => {
     try {
       // @ts-ignore
-      state.document = await getJSONGraph($route.params.id)
+      state.document = await getGraphWithFormat($route.params.id, 'application/json+ld')
     } catch (e) {
       console.log(e)
     }

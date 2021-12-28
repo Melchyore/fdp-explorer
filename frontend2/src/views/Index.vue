@@ -32,7 +32,12 @@
       </section>
     </template>
 
-    <resource :resource="state.resource" v-if="state.resource.length > 0"></resource>
+    <!--<resource :resource="state.resource" v-if="state.resource.length > 0"></resource>-->
+    <section class="h-full w-4/6 flex px-4 pb-5">
+      <div class="w-full h-full p-4">
+        <div id="resource" v-if="state.resource"></div>
+      </div>
+    </section>
   </router-view>
 </template>
 

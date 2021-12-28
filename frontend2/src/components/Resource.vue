@@ -110,39 +110,34 @@
           <template v-for="(metadata, index) in state.otherMetadata" :key="index">
             <tr>
               <td><strong>{{ metadata[0] }}</strong></td>
-              <td>{{ metadata[1] }}</td>
+
+              <template v-if="metadata[1].length > 1">
+                <ul>
+                  <li v-for="(value, key) in metadata[1]" :key="key">
+                    <metadata-value :value="getObjectValue(value)"></metadata-value>
+                  </li>
+                </ul>
+              </template>
+              <template v-else>
+                <td>
+                  <metadata-value :value="getObjectValue(metadata[1][0])"></metadata-value>
+                </td>
+              </template>
             </tr>
           </template>
         </table>
       </template>
     </div>
   </section>
-
-  <!--<template v-if="catalogs.length > 0">
-    <card
-      v-for="(catalog, index) in catalogs"
-      :key="index"
-      :document="catalog"
-      :types="{}"
-    />
-  </template>
-
-  <template v-if="datasets.length > 0">
-    <card
-      v-for="(dataset, index) in datasets"
-      :key="index"
-      :document="dataset"
-      :types="{}"
-    />
-  </template>-->
 </template>
 
 <script setup lang="ts">
   import { ref, PropType, onMounted, onBeforeMount } from 'vue'
 
-  import Card from '@/components/Card.vue'
+  import MetadataValue from './MetadataValue.vue'
 
-  import { isValidHttpUrl } from '../lib/HTTP'
+  import { isValidHttpUrl } from '@/lib/HTTP'
+  import { getObjectValue } from '@/lib/Utils'
 
   import useResource from '@/composables/useResource'
 

@@ -70,7 +70,7 @@ export default function useResource (resource: Array<Record<string, unknown>>) {
     isPartOf: '',
     children: {} as Record<string, Array<Record<string, string>>>,
     parents: [] as Array<Record<string, string>>,
-    otherMetadata: [] as Array<[string, string]>
+    otherMetadata: [] as Array<[string, Array<Record<string, string>>]>
   })
 
   onBeforeMount(async () => {
@@ -136,9 +136,9 @@ export default function useResource (resource: Array<Record<string, unknown>>) {
 
           for (const _node in node) {
             if (![...Object.values(Predicate), '@id', '@type'].includes(_node as Predicate)) {
-              const obj = node[_node][0]
+              const obj = node[_node]
 
-              state.otherMetadata.push([normalizeName(_node), obj['@id'] ? obj['@id'] : obj['@value']])
+              state.otherMetadata.push([normalizeName(_node), obj])
             }
           }
         })

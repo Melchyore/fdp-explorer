@@ -4,7 +4,7 @@ import * as HTTP from '@/lib/HTTP'
 import { Graph, GraphInterface } from '@/lib/Graph'
 
 import * as ResourceStylesheet from '@/stylesheets/Resource.xsl'
-import { getJSONGraph } from '@/lib/Utils'
+import { getGraphWithFormat } from '@/lib/Utils'
 
 export default function useAddURL () {
   const state = reactive({
@@ -28,19 +28,27 @@ export default function useAddURL () {
     headers.append('Accept', 'text/turtle')
 
     if (state.uri) {
-      //_headers.append('Accept', 'application/rdf+xml')
+      const _headers = new Headers()
+      _headers.append('Accept', 'application/rdf+xml')
 
-      /*const parser = new DOMParser()
+      const _response = await HTTP.get(state.uri, _headers)
+
+      const parser = new DOMParser()
       const xsl = parser.parseFromString(ResourceStylesheet.default, 'text/xml')
       const xsltProcessor = new XSLTProcessor()
       xsltProcessor.importStylesheet(xsl)
+
       const xml = parser.parseFromString(await _response.text(), 'text/xml')
-      const resultDocument = xsltProcessor.transformToFragment(xml, document)
+      const resultDocument = xsltProcessor.transformToDocument(xml)
 
       const serializer = new XMLSerializer()
 
-      state.resource = serializer.serializeToString(resultDocument)*/
-      state.resource = await getJSONGraph(state.uri)
+      // @ts-ignore
+      //state.resource = serializer.serializeToString(resultDocument)
+      state.resource = resultDocument.documentElement
+      console.log(state.resource)
+      document.getElementById('resource')?.appendChild(resultDocument.documentElement)
+      //state.resource = await getGraphWithFormat(state.uri, 'application/json+ld')
   
       try {
         const response = await HTTP.get(state.uri, headers)
