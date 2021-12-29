@@ -1,10 +1,15 @@
 import { reactive } from 'vue'
 
+import * as RDF from "@rdfjs/types"
+
 import * as HTTP from '@/lib/HTTP'
 import { Graph, GraphInterface } from '@/lib/Graph'
 
 import * as ResourceStylesheet from '@/stylesheets/Resource.xsl'
 import { getGraphWithFormat } from '@/lib/Utils'
+
+import rdfParser from "rdf-parse"
+import SerializeToRDFXML from '@/lib/SerializeToRDFXML'
 
 export default function useAddURL () {
   const state = reactive({
@@ -28,7 +33,7 @@ export default function useAddURL () {
     headers.append('Accept', 'text/turtle')
 
     if (state.uri) {
-      const _headers = new Headers()
+      /*const _headers = new Headers()
       _headers.append('Accept', 'application/rdf+xml')
 
       const _response = await HTTP.get(state.uri, _headers)
@@ -48,12 +53,30 @@ export default function useAddURL () {
       state.resource = resultDocument.documentElement
       console.log(state.resource)
       document.getElementById('resource')?.appendChild(resultDocument.documentElement)
-      //state.resource = await getGraphWithFormat(state.uri, 'application/json+ld')
+      //state.resource = await getGraphWithFormat(state.uri, 'application/json+ld')*/
   
       try {
         const response = await HTTP.get(state.uri, headers)
+        const str = await response.text()
+        const quads = [] as Array<RDF.Quad>
+
+        rdfParser.parse(require('streamify-string')(str), { contentType: 'text/turtle', baseIRI: state.uri })
+          .on('data', (quad: RDF.Quad) => quads.push(quad))
+          .on('error', (error) => console.error(error))
+          .on('end', () => {
+            const content = SerializeToRDFXML.serialize(quads)
+            /*const documentWindow = window.open('', '_blank')
+            documentWindow?.document.write('test')
+            console.log(content)*/
+
+            console.log(content)
+
+            let blob = new Blob([content], { type: 'text/xml' })
+            let url = URL.createObjectURL(blob)
+            window.open(url, '_blank')
+          })
   
-        state.graph = new Graph(await response.text())
+        state.graph = new Graph(str)
         state.graph.parse()
       } catch {}
     }

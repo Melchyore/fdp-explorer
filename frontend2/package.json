@@ -23,6 +23,7 @@
     "vue": "^3.0.0",
     "vue-router": "^4.0.0-0",
     "vuex": "^4.0.0-0",
+    "xml-writer": "^1.7.0",
     "xslt3-loader": "^0.0.9"
   },
   "devDependencies": {
